@@ -38,8 +38,8 @@ linters:
     - gocritic
     - gocyclo
     - godot
-#    - gofmt
-#    - gofumpt
+    - gofmt
+    - gofumpt
     - goheader
     - goprintffuncname
     - gosec
@@ -51,7 +51,7 @@ linters:
     - lll
     - makezero
     - misspell
-#    - nestif
+    - nestif
     - nilerr
     - noctx
     - nolintlint
@@ -71,4 +71,4 @@ linters:
     - unused
     - varcheck
     - wastedassign
-#    - whitespace
+    - whitespace
