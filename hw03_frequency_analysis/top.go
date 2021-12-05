@@ -1,7 +1,6 @@
 package hw03frequencyanalysis
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 )
@@ -13,13 +12,15 @@ func Top10(text string) []string {
 
 	// create map of words
 	for _, word := range wordsList {
-		if _, ok := wordsCountMap[word]; ok {
-			wordsCountMap[word]++
+		// ignore case, removed punctuation symbols
+		word = strings.ToLower(word)
+		word = strings.Trim(word, ",!-.")
+		if len(word) == 0 {
 			continue
 		}
-		wordsCountMap[word] = 1
+
+		wordsCountMap[word]++
 	}
-	fmt.Println(wordsCountMap)
 
 	// find top 10
 	// - create slice of words
@@ -27,7 +28,6 @@ func Top10(text string) []string {
 	for word := range wordsCountMap {
 		wordsSlice = append(wordsSlice, word)
 	}
-	fmt.Println(wordsSlice, len(wordsSlice))
 
 	// - sort slice with map data
 	sort.Slice(wordsSlice, func(i, j int) bool {
