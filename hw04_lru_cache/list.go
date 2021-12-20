@@ -107,6 +107,8 @@ func (l *list) MoveToFront(i *ListItem) {
 	i.Prev.Next = i.Next
 	if i.Next != nil {
 		i.Next.Prev = i.Prev
+	} else {
+		l.backItem = i.Prev // если элемент был последний меняем указатель списка
 	}
 	// перемещаем элемент в начало списка
 	i.Next = l.frontItem
