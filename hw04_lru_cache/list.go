@@ -43,14 +43,16 @@ func (l *list) PushFront(v interface{}) *ListItem {
 		Next:  l.frontItem,
 	}
 
+	// указываем конец списка на элемент, если конца пока нет: size == 0
 	if l.backItem == nil {
 		l.backItem = &newItem
 	}
+	// передвигаем первый элемент и смещаем указатель на новый
 	if l.frontItem != nil {
 		l.frontItem.Prev = &newItem
 	}
-
 	l.frontItem = &newItem
+
 	l.size++
 
 	return &newItem
@@ -62,14 +64,16 @@ func (l *list) PushBack(v interface{}) *ListItem {
 		Value: v,
 		Prev:  l.backItem,
 	}
+	// указываем начало списка на элемент, если начала пока нет: size == 0
 	if l.frontItem == nil {
 		l.frontItem = &newItem
 	}
+	// передвигаем последний элемент и смещаем указатель на новый
 	if l.backItem != nil {
 		l.backItem.Next = &newItem
 	}
-
 	l.backItem = &newItem
+
 	l.size++
 
 	return &newItem
@@ -77,11 +81,13 @@ func (l *list) PushBack(v interface{}) *ListItem {
 
 // удалить элемент.
 func (l *list) Remove(i *ListItem) {
+	// смещаем указатель следующего...
 	if i.Next != nil {
 		i.Next.Prev = i.Prev
 	} else {
 		l.backItem = i.Prev
 	}
+	// ... и предыдущего элемента
 	if i.Prev != nil {
 		i.Prev.Next = i.Next
 	} else {
@@ -97,7 +103,12 @@ func (l *list) MoveToFront(i *ListItem) {
 		return
 	}
 
+	// соединяем соседей
 	i.Prev.Next = i.Next
+	if i.Next != nil {
+		i.Next.Prev = i.Prev
+	}
+	// перемещаем элемент в начало списка
 	i.Next = l.frontItem
 	i.Prev = nil
 	l.frontItem.Prev = i
