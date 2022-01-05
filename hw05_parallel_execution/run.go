@@ -2,71 +2,42 @@ package hw05parallelexecution
 
 import (
 	"errors"
-	"fmt"
+	"sync"
 )
 
 var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
 type Task func() error
 
+type ErrSumm struct {
+	sync.Mutex
+	totalErrors int
+}
+
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
 func Run(tasks []Task, n, m int) error {
+	var wg sync.WaitGroup
+	errCounter := ErrSumm{}
 
-	errorsChannel := make(chan error, 1000)    // результат выполнения таска
-	queueWorkers := make(chan chan Task, 1000) // канал, куда воркеры помещают свой канал, когда освободятся
-	workersPool := make([]*Worker, n)          // пул воркеров
-
-	// create dispatcher with n workers
-	dispatcher := Dispatcher{
-		workersPool:   workersPool,
-		TaskChan:      make(chan Task),
-		QueueWorkers:  queueWorkers,
-		ErrorsChannel: errorsChannel,
-		End:           make(chan bool),
-	}
-
-	// Start dispatcher processor and workers.
-	dispatcher.StartWorkers()
-
-	var errorsLimitReached bool
-
-	// go func() {
-	// 	// adding tasks to dispatcher
-	// 	for _, task := range tasks {
-	// 		if errorsLimitReached {
-	// 			return
-	// 		}
-	// 		dispatcher.AddTaskToProcess(task)
-	// 	}
-
-	// }()
-
-	// // count errrors
-	// var errTotal int
-	// for i := 0; i < len(tasks); i++ {
-	// 	res := <-errorsChannel
-	// 	if res != nil {
-	// 		errTotal++
-	// 		if errTotal >= m {
-	// 			errorsLimitReached = true
-	// 			break
-	// 		}
-	// 	}
-	// }
-
-	for it, task := range tasks {
-		if dispatcher.ErrorsCount >= m {
-			errorsLimitReached = true
-			break
+	for i := 0; i < len(tasks); {
+		for w := 0; w < n && i < len(tasks); w++ {
+			wg.Add(1)
+			go func(t Task) {
+				defer wg.Done()
+				res := t()
+				if res != nil {
+					errCounter.Lock()
+					errCounter.totalErrors++
+					errCounter.Unlock()
+				}
+			}(tasks[i])
+			i++
 		}
-		fmt.Println("Sending task", it)
-		dispatcher.AddTaskToProcess(task)
+		wg.Wait()
+		if errCounter.totalErrors >= m {
+			return ErrErrorsLimitExceeded
+		}
 	}
 
-	dispatcher.End <- true
-	dispatcher.StopWorkers()
-	if errorsLimitReached {
-		return ErrErrorsLimitExceeded
-	}
 	return nil
 }
