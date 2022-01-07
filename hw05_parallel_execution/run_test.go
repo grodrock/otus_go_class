@@ -38,10 +38,9 @@ func TestRun(t *testing.T) {
 		require.LessOrEqual(t, runTasksCount, int32(workersCount+maxErrorsCount), "extra tasks were started")
 
 		runTasksCount = 0
-		workersCount = 5
 		err2 := Run(tasks, workersCount, -1) // no errors allowed at all
 		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err2)
-		require.LessOrEqual(t, runTasksCount, int32(workersCount), "extra tasks were started")
+		require.LessOrEqual(t, runTasksCount, int32(workersCount+maxErrorsCount), "extra tasks were started")
 	})
 
 	t.Run("tasks without errors", func(t *testing.T) {
