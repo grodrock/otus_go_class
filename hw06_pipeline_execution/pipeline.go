@@ -11,16 +11,26 @@ type (
 // этой функции.
 type Stage func(in In) (out Out)
 
-// getResultChannel - функция, которая возвращает канал с результатами пайплайна,
-// закрывает его по окончании или при получении сигнала остановки.
-func getResultChannel(in In, done In) Out {
+func ExecutePipeline(in In, done In, stages ...Stage) Out {
+	// Значения из канала in передаются в первый этап Stage,
+	// результат которой - входной канал для следующего этапа Stage
+
+	inNext := in // канал данных для следующего этапа
+
+	for _, stage := range stages {
+		inNext = stage(inNext)
+	}
+
+	// resChannel - канал с результатами пайплайна,
+	// который мы закрываем по окончании работы
+	// или при получении сигнала остановки.
 	resChannel := make(chan interface{})
 
 	go func() {
 		defer close(resChannel)
 		for {
 			select {
-			case v, ok := <-in:
+			case v, ok := <-inNext:
 				if !ok {
 					return
 				}
@@ -32,19 +42,4 @@ func getResultChannel(in In, done In) Out {
 	}()
 
 	return resChannel
-}
-
-func ExecutePipeline(in In, done In, stages ...Stage) Out {
-	// Значения из канала in передаются в первый этап Stage,
-	// результат которой - входной канал для следующего этапа Stage
-
-	inNext := in // канал данных для следующего этапа
-
-	for _, stage := range stages {
-		inNext = stage(inNext)
-	}
-
-	resultChannel := getResultChannel(inNext, done)
-
-	return resultChannel
 }
