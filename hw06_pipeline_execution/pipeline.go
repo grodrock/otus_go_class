@@ -17,16 +17,15 @@ func getResultChannel(in In, done In) Out {
 	resChannel := make(chan interface{})
 
 	go func() {
+		defer close(resChannel)
 		for {
 			select {
 			case v, ok := <-in:
 				if !ok {
-					close(resChannel)
 					return
 				}
 				resChannel <- v
 			case <-done:
-				close(resChannel)
 				return
 			}
 		}
