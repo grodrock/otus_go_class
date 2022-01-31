@@ -9,7 +9,6 @@ import (
 )
 
 func TestCopy(t *testing.T) {
-
 	t.Run("file not exist check", func(t *testing.T) {
 		err := Copy("NotExistFile", "out", 0, 0)
 		require.Errorf(t, os.ErrNotExist, err.Error())
