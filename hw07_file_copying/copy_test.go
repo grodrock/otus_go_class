@@ -18,4 +18,10 @@ func TestCopy(t *testing.T) {
 		err := Copy("testdata/input.txt", "out", 1<<20, 0)
 		require.Truef(t, errors.Is(err, ErrOffsetExceedsFileSize), "actual err - %v", err)
 	})
+
+	t.Run("test copy big file with pb", func(t *testing.T) {
+		t.Skip("File not present in repo")
+		err := Copy("testdata/big_file.txt", "out", 0, 0)
+		require.NoError(t, err)
+	})
 }
