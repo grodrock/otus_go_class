@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io"
 	"os"
+
+	"github.com/cheggaaa/pb"
 )
 
 var (
@@ -59,6 +61,8 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		buffSize = int(toCopyBytes)
 	}
 	dataBuffer := make([]byte, buffSize) // копируем с буфером
+	bar := pb.New(int(toCopyBytes)).SetUnits(pb.U_BYTES)
+	bar.Start()
 	for toCopyBytes > 0 {
 		// Read data
 		readed, err := file.Read(dataBuffer)
@@ -75,7 +79,9 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 			return err
 		}
 		toCopyBytes -= int64(readed)
+		bar.Add(readed)
 	}
+	bar.Finish()
 
 	return nil
 }
