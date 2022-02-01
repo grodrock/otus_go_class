@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"io"
 	"os"
 )
 
@@ -30,34 +31,51 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	}
 
 	// устанавливаем необходимое кол-во данных для копирования
+	toCopyBytes := limit
+	// если лимит не задан или превышает размер файла, копируем весь файл
 	if limit == 0 || limit > fSize {
-		limit = fSize
+		toCopyBytes = fSize
 	}
+	// если лимит после смещения превышает размер файла, копируем только остаток файла
 	if offset+limit > fSize {
-		limit = fSize - offset
+		toCopyBytes = fSize - offset
 	}
 
-	file, err := os.Open(fromPath)
+	file, err := os.Open(fromPath) // reader
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	// Read data
-	data := make([]byte, limit)
-	file.Seek(offset, 1)
-	file.Read(data)
-
-	// Write data
-	fileTo, err := os.Create(toPath)
+	fileTo, err := os.Create(toPath) // writer
 	if err != nil {
 		return err
 	}
-
 	defer fileTo.Close()
-	_, err = fileTo.Write(data)
-	if err != nil {
-		return err
+
+	file.Seek(offset, 1) // move to offset
+	buffSize := 1024
+	if buffSize > int(toCopyBytes) {
+		buffSize = int(toCopyBytes)
 	}
+	dataBuffer := make([]byte, buffSize) // копируем с буфером
+	for toCopyBytes > 0 {
+		// Read data
+		readed, err := file.Read(dataBuffer)
+		if err != nil && err != io.EOF {
+			return err
+		}
+
+		if readed < len(dataBuffer) {
+			dataBuffer = dataBuffer[:readed]
+		}
+		// Write data
+		_, err = fileTo.Write(dataBuffer)
+		if err != nil {
+			return err
+		}
+		toCopyBytes -= int64(readed)
+	}
+
 	return nil
 }
