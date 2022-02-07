@@ -17,7 +17,7 @@ type EnvValue struct {
 // ReadDir reads a specified directory and returns map of env variables.
 // Variables represented as files where filename is name of variable, file first line is a value.
 func ReadDir(dir string) (Environment, error) {
-	env := make(Environment, 0)
+	env := make(Environment)
 	dirEntries, err := os.ReadDir(dir)
 	if err != nil {
 		return env, err
@@ -32,12 +32,11 @@ func ReadDir(dir string) (Environment, error) {
 		if err == nil {
 			env[fname] = envval
 		}
-
 	}
 	return env, nil
 }
 
-// ReadEnvFile reads file and return EnvValue
+// ReadEnvFile reads file and return EnvValue.
 func ReadEnvFile(fname string) (EnvValue, error) {
 	var envval EnvValue
 
@@ -52,7 +51,6 @@ func ReadEnvFile(fname string) (EnvValue, error) {
 
 	var resBuilder strings.Builder
 	for _, r := range fData {
-
 		if r == 0 {
 			resBuilder.WriteString("\n")
 			continue
@@ -65,4 +63,21 @@ func ReadEnvFile(fname string) (EnvValue, error) {
 	envval.Value = strings.TrimRight(resBuilder.String(), "\t ")
 
 	return envval, nil
+}
+
+// UpdateOsEnv updates os.Environ with Environment values.
+func (env *Environment) UpdateOsEnv() error {
+	for k, v := range *env {
+		var err error
+		switch v.NeedRemove {
+		case true:
+			err = os.Unsetenv(k)
+		case false:
+			err = os.Setenv(k, v.Value)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
