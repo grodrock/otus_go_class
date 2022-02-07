@@ -6,20 +6,27 @@ import (
 	"os/exec"
 )
 
+const (
+	RetOk  = 0
+	RetErr = 1
+)
+
 // RunCmd runs a command + arguments (cmd) with environment variables from env.
 func RunCmd(cmd []string, env Environment) (returnCode int) {
-
-	command := exec.Command(cmd[0])
-	command.Env = append(os.Environ())
-	fmt.Println("command", command)
-	if len(cmd) > 1 {
-		command.Args = cmd[1:]
-		fmt.Println("command.Args", command.Args)
+	if err := env.UpdateOsEnv(); err != nil {
+		return RetErr
 	}
+
+	args := make([]string, 0)
+	if len(cmd) > 1 {
+		args = cmd[1:]
+	}
+	command := exec.Command(cmd[0], args...) //nolint:gosec
+
 	command.Stdout = os.Stdout
 	if err := command.Run(); err != nil {
 		fmt.Println(err)
-		return 1
+		return RetErr
 	}
-	return 0
+	return RetOk
 }
