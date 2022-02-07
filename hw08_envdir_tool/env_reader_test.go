@@ -8,12 +8,17 @@ import (
 
 func TestReadDir(t *testing.T) {
 	t.Run("read env dir", func(t *testing.T) {
+		env_expected := Environment{
+			"BAR":   EnvValue{"bar", false},
+			"HELLO": EnvValue{"\"hello\"", false},
+			"EMPTY": EnvValue{"", false},
+			"UNSET": EnvValue{"", true},
+		}
 		env, err := ReadDir("testdata/env")
 		require.ErrorIs(t, nil, err)
-		require.Equal(t, env["BAR"], EnvValue{"bar", false})
-		require.Equal(t, env["HELLO"], EnvValue{"\"hello\"", false})
-		require.Equal(t, env["EMPTY"], EnvValue{"", false})
-		require.Equal(t, env["UNSET"], EnvValue{"", true})
+		for k, v := range env_expected {
+			require.Equal(t, v, env[k], "%v wrong value", k)
+		}
 	})
 }
 func TestReadEnvFile(t *testing.T) {
