@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type UserRole string
@@ -37,12 +39,13 @@ type (
 )
 
 func TestValidate(t *testing.T) {
+
 	tests := []struct {
 		in          interface{}
 		expectedErr error
 	}{
 		{
-			// Place your code here.
+			UserRole("role"), ErrorNotStructure,
 		},
 		// ...
 		// Place your code here.
@@ -53,8 +56,9 @@ func TestValidate(t *testing.T) {
 			tt := tt
 			t.Parallel()
 
-			// Place your code here.
-			_ = tt
+			err := Validate(tt.in)
+			require.ErrorIs(t, err, tt.expectedErr, "err %v not as expected %v", err, tt.expectedErr)
+
 		})
 	}
 }
