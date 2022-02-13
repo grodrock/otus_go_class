@@ -47,8 +47,9 @@ func TestValidate(t *testing.T) {
 		{
 			UserRole("role"), ErrorNotStructure,
 		},
-		// ...
-		// Place your code here.
+		{
+			App{"1.2.3"}, nil,
+		},
 	}
 
 	for i, tt := range tests {
@@ -60,5 +61,22 @@ func TestValidate(t *testing.T) {
 			require.ErrorIs(t, err, tt.expectedErr, "err %v not as expected %v", err, tt.expectedErr)
 
 		})
+	}
+}
+
+func TestStringValidator(t *testing.T) {
+	tests := []struct {
+		in          string
+		rule        string
+		expectedErr error
+	}{
+		{"1.2.3", "len:5", nil},
+		{"1.2.3", "len:6", ErrorStringValidation},
+		{"1.2.3", "len:x", ErrNotValidRule},
+	}
+
+	for _, tt := range tests {
+		err := ValidateString(tt.in, tt.rule)
+		require.ErrorIs(t, err, tt.expectedErr)
 	}
 }
