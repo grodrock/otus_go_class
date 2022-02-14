@@ -16,9 +16,7 @@ type ValidationError struct {
 const validateTag string = "validate"
 
 // errors
-var (
-	ErrorNotStructure error = errors.New("not a structure")
-)
+var ()
 
 type ValidationErrors []ValidationError
 
@@ -37,7 +35,7 @@ func Validate(v interface{}) error {
 	// check value is a struct
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Struct {
-		return ErrorNotStructure
+		return ErrorNotSupportedType
 	}
 	return ValidateStruct(rv)
 }
