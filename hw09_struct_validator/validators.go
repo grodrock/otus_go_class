@@ -9,7 +9,7 @@ import (
 func ValidateString(value string, rule string) error {
 	fmt.Println("Validating string:", value, "with rule:", rule)
 
-	ruleMatcher, err := GetRuleMatcher(rule)
+	ruleMatcher, err := GetRules(rule)
 	if err != nil {
 		return err
 	}
