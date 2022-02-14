@@ -1,6 +1,7 @@
 package hw09structvalidator
 
 import (
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -52,6 +53,11 @@ func getRuleMatcher(rulestr string) (RuleMatcher, error) {
 			return &RuleLenValidator{v}, nil
 		}
 		return nil, ErrNotValidRule
+	case "min":
+		if v, err := strconv.Atoi(ruleValue); err == nil {
+			return &RuleMinValidator{v}, nil
+		}
+		return nil, ErrNotValidRule
 
 	}
 
@@ -62,10 +68,23 @@ type RuleLenValidator struct {
 	length int
 }
 
-func (rv *RuleLenValidator) isMatched(v interface{}) bool {
-	val, ok := v.(string)
-	if !ok {
+func (rvalidator *RuleLenValidator) isMatched(v interface{}) bool {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.String {
 		return false
 	}
-	return len(val) == rv.length
+	return len(v.(string)) == rvalidator.length
+}
+
+type RuleMinValidator struct {
+	min int
+}
+
+func (rvalidator *RuleMinValidator) isMatched(v interface{}) bool {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Int {
+		return false
+	}
+
+	return v.(int) >= rvalidator.min
 }

@@ -1,7 +1,6 @@
 package hw09structvalidator
 
 import (
-	"fmt"
 	"log"
 	"reflect"
 
@@ -56,8 +55,8 @@ func ValidateStruct(rv reflect.Value) error {
 		if !ok {
 			continue
 		}
-
-		_, err := GetRules(validateTagString)
+		// create rules from validateTagString
+		rules, err := GetRules(validateTagString)
 		if err != nil {
 			validationErrors = append(validationErrors, ValidationError{
 				Field: fieldName,
@@ -65,13 +64,18 @@ func ValidateStruct(rv reflect.Value) error {
 			})
 			continue
 		}
-
-		switch fv.Kind() {
-		case reflect.String:
-			err := ValidateString(fv.String(), validateTagString)
-			fmt.Println(err)
+		// validate value
+		if !IsValid(fv, rules) {
+			validationErrors = append(validationErrors, ValidationError{
+				Field: fieldName,
+				Err:   ErrFieldValidation,
+			})
 		}
 
+	}
+
+	if len(validationErrors) > 0 {
+		return validationErrors
 	}
 
 	return nil

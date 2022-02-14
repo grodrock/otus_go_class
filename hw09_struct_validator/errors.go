@@ -8,6 +8,7 @@ var (
 	// field validation errors
 	ErrStringValidation = errors.New("string validation error")
 	ErrIntValidation    = errors.New("int validation error")
+	ErrFieldValidation  = errors.New("field not matches to rules")
 	// rule validation errors
 	ErrNotValidRule       = errors.New("not valid rule")
 	ErrNotImplementedRule = errors.New("rule not implemented")
