@@ -44,12 +44,8 @@ func TestValidate(t *testing.T) {
 		in          interface{}
 		expectedErr error
 	}{
-		{
-			UserRole("role"), ErrorNotStructure,
-		},
-		{
-			App{"1.2.3"}, nil,
-		},
+		{UserRole("role"), ErrorNotSupportedType},
+		{App{"1.2.3"}, nil},
 	}
 
 	for i, tt := range tests {
@@ -71,7 +67,8 @@ func TestStringValidator(t *testing.T) {
 		expectedErr error
 	}{
 		{"1.2.3", "len:5", nil},
-		{"1.2.3", "len:6", ErrorStringValidation},
+		{"1.2.3", "len:6", ErrStringValidation},
+		{"1.2.34", "len:5", ErrStringValidation},
 		{"1.2.3", "len:x", ErrNotValidRule},
 	}
 

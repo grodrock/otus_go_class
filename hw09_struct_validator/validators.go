@@ -6,12 +6,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// errors
-var (
-	ErrorStringValidation error = errors.New("string validation error")
-	ErrorIntValidation    error = errors.New("int validation error")
-)
-
 func ValidateString(value string, rule string) error {
 	fmt.Println("Validating string:", value, "with rule:", rule)
 
@@ -24,7 +18,7 @@ func ValidateString(value string, rule string) error {
 		return errors.New("nor error or RuleMatcher recieved from GetRuleMatcher")
 	}
 	if !ruleMatcher.isMatched(value) {
-		return ErrorStringValidation
+		return ErrStringValidation
 	}
 
 	return nil

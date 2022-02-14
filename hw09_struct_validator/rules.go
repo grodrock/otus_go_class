@@ -3,13 +3,6 @@ package hw09structvalidator
 import (
 	"regexp"
 	"strconv"
-
-	"github.com/pkg/errors"
-)
-
-var (
-	ErrNotValidRule       = errors.New("not valid rule")
-	ErrNotImplementedRule = errors.New("rule not implemented")
 )
 
 type RuleMatcher interface {
