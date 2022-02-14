@@ -1,25 +1,17 @@
 package hw09structvalidator
 
 import (
-	"fmt"
-
-	"github.com/pkg/errors"
+	"reflect"
 )
 
-func ValidateString(value string, rule string) error {
-	fmt.Println("Validating string:", value, "with rule:", rule)
-
-	ruleMatcher, err := GetRules(rule)
-	if err != nil {
-		return err
-	}
-	if ruleMatcher == nil {
-		// test case - we should always have RuleMatcher here
-		return errors.New("nor error or RuleMatcher recieved from GetRuleMatcher")
-	}
-	if !ruleMatcher.isMatched(value) {
-		return ErrStringValidation
+func IsValid(v interface{}, rm RuleMatcher) bool {
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.String:
+		return rm.isMatched(rv.String())
 	}
 
-	return nil
+	return rm.isMatched(v)
+
+	// return false
 }
