@@ -59,7 +59,24 @@ func TestValidate(t *testing.T) {
 		})
 	}
 }
+func TestRuleMatcher(t *testing.T) {
+	tests := []struct {
+		rulestr     string
+		rules       Rules
+		expectedErr error
+	}{
+		{"len:5", Rules{&RuleLenValidator{5}}, nil},
+		{"len:5|len:10", Rules{&RuleLenValidator{5}, &RuleLenValidator{10}}, nil},
+		{"lenx:5", nil, ErrNotImplementedRule},
+		{"len:5x", nil, ErrNotValidRule},
+	}
 
+	for _, tt := range tests {
+		matcher, err := GetRules(tt.rulestr)
+		require.ErrorIs(t, err, tt.expectedErr)
+		require.Equal(t, tt.rules, matcher)
+	}
+}
 func TestStringValidator(t *testing.T) {
 	tests := []struct {
 		in          string

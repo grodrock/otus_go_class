@@ -41,6 +41,7 @@ func Validate(v interface{}) error {
 }
 
 func ValidateStruct(rv reflect.Value) error {
+	var validationErrors ValidationErrors
 	t := rv.Type()
 	fieldsNum := t.NumField()
 	log.Printf("type: %v, fields: %d", t, fieldsNum)
@@ -48,16 +49,26 @@ func ValidateStruct(rv reflect.Value) error {
 	for i := 0; i < fieldsNum; i++ {
 		field := t.Field(i)
 		fv := rv.Field(i)
+		fieldName := field.Name
 
 		// get validation rule if exist
-		rulesString, ok := field.Tag.Lookup(validateTag)
+		validateTagString, ok := field.Tag.Lookup(validateTag)
 		if !ok {
+			continue
+		}
+
+		_, err := GetRules(validateTagString)
+		if err != nil {
+			validationErrors = append(validationErrors, ValidationError{
+				Field: fieldName,
+				Err:   err,
+			})
 			continue
 		}
 
 		switch fv.Kind() {
 		case reflect.String:
-			err := ValidateString(fv.String(), rulesString)
+			err := ValidateString(fv.String(), validateTagString)
 			fmt.Println(err)
 		}
 
