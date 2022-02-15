@@ -98,6 +98,7 @@ func TestIsValid(t *testing.T) {
 		{5, "len:6", false},
 		{21, "min:20", true},
 		{19, "min:20", false},
+		{[]string{"123456", "abcdef"}, "len:6", true},
 	}
 
 	for _, tt := range tests {
