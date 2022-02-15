@@ -8,7 +8,7 @@ import (
 )
 
 type RuleMatcher interface {
-	isMatched(v interface{}) bool
+	isMatched(v interface{}) error
 }
 
 type Rules []RuleMatcher
@@ -28,13 +28,13 @@ func GetRules(rulesSstr string) (Rules, error) {
 }
 
 // isMatched validate all rules in Rules is matched to v.
-func (r Rules) isMatched(v interface{}) bool {
+func (r Rules) isMatched(v interface{}) error {
 	for _, rm := range r {
-		if ok := rm.isMatched(v); !ok {
-			return false
+		if err := rm.isMatched(v); err != nil {
+			return err
 		}
 	}
-	return true
+	return nil
 }
 
 // GetRuleMatcher return RuleMatcher from rule string
@@ -68,23 +68,31 @@ type RuleLenValidator struct {
 	length int
 }
 
-func (rvalidator *RuleLenValidator) isMatched(v interface{}) bool {
+func (rvalidator *RuleLenValidator) isMatched(v interface{}) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.String {
-		return false
+		return ErrRuleWrongType
 	}
-	return len(v.(string)) == rvalidator.length
+	result := len(v.(string)) == rvalidator.length
+	if result {
+		return nil
+	}
+	return RuleLengthInvalid
 }
 
 type RuleMinValidator struct {
 	min int
 }
 
-func (rvalidator *RuleMinValidator) isMatched(v interface{}) bool {
+func (rvalidator *RuleMinValidator) isMatched(v interface{}) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Int {
-		return false
+		return ErrRuleWrongType
 	}
 
-	return v.(int) >= rvalidator.min
+	result := v.(int) >= rvalidator.min
+	if result {
+		return nil
+	}
+	return RuleMinInvalid
 }

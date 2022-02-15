@@ -5,23 +5,22 @@ import (
 )
 
 // wrapper on rules validation: helps to validate slice elems
-func IsValid(v interface{}, rm RuleMatcher) bool {
+func IsValid(v interface{}, rm RuleMatcher) error {
 	rv := reflect.ValueOf(v)
-	var isMatched bool
 	switch rv.Kind() {
 	case reflect.Slice:
 
 		for i := 0; i < rv.Len(); i++ {
 			elem := rv.Index(i)
 			if !elem.CanInterface() {
-				return false
+				return ErrValueValidation
 			}
-			isMatched = rm.isMatched(elem.Interface())
-			if !isMatched {
-				return false
+			err := rm.isMatched(elem.Interface())
+			if err != nil {
+				return err
 			}
 		}
-		return true
+		return nil
 	default:
 		return rm.isMatched(v)
 	}
