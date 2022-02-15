@@ -1,7 +1,6 @@
 package hw09structvalidator
 
 import (
-	"log"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -40,7 +39,6 @@ func ValidateStruct(rv reflect.Value) error {
 	var validationErrors ValidationErrors
 	t := rv.Type()
 	fieldsNum := t.NumField()
-	log.Printf("type: %v, fields: %d", t, fieldsNum)
 
 	for i := 0; i < fieldsNum; i++ {
 		field := t.Field(i)
@@ -67,15 +65,16 @@ func ValidateStruct(rv reflect.Value) error {
 		if !fv.CanInterface() {
 			validationErrors = append(validationErrors, ValidationError{
 				Field: fieldName,
-				Err:   ErrFieldValidation,
+				Err:   ErrValueValidation,
 			})
 		}
 
-		// validate value
-		if !IsValid(fv.Interface(), rules) {
+		// validate value against rule
+		err = IsValid(fv.Interface(), rules)
+		if err != nil {
 			validationErrors = append(validationErrors, ValidationError{
 				Field: fieldName,
-				Err:   ErrFieldValidation,
+				Err:   err,
 			})
 		}
 

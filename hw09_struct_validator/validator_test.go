@@ -47,7 +47,7 @@ func TestValidate(t *testing.T) {
 		{App{"1.2.3"}, nil},
 		{
 			App{"1.2.34"},
-			ValidationErrors{ValidationError{"Version", ErrFieldValidation}},
+			ValidationErrors{ValidationError{"Version", RuleLengthInvalid}},
 		},
 	}
 
@@ -66,7 +66,7 @@ func TestValidate(t *testing.T) {
 		})
 	}
 }
-func TestRuleMatcher(t *testing.T) {
+func TestGetRules(t *testing.T) {
 	tests := []struct {
 		rulestr       string
 		expectedrules Rules
@@ -89,23 +89,26 @@ func TestRuleMatcher(t *testing.T) {
 }
 func TestIsValid(t *testing.T) {
 	tests := []struct {
-		in              interface{}
-		rulestr         string
-		expectedisValid bool
+		in          interface{}
+		rulestr     string
+		expectedErr error
 	}{
-		{"1.2.3", "len:5", true},
-		{"1.2.3", "len:6", false},
-		{5, "len:6", false},
-		{21, "min:20", true},
-		{19, "min:20", false},
-		{[]string{"123456", "abcdef"}, "len:6", true},
+		//len
+		{"1.2.3", "len:5", nil},
+		{"1.2.3", "len:6", RuleLengthInvalid},
+		{5, "len:6", ErrRuleWrongType},
+		{[]string{"123456", "abcdef"}, "len:6", nil},
+		{[]string{"123456", "abcdefx"}, "len:6", RuleLengthInvalid},
+		//min
+		{21, "min:20", nil},
+		{19, "min:20", RuleMinInvalid},
 	}
 
-	for _, tt := range tests {
+	for i, tt := range tests {
 		rules, err := GetRules(tt.rulestr)
 		require.NoError(t, err)
 		isValid := IsValid(tt.in, rules)
-		require.Equal(t, tt.expectedisValid, isValid,
-			"validation miss: %s against %s", tt.in, tt.rulestr)
+		require.Equal(t, tt.expectedErr, isValid,
+			"case %d validation miss: %s against %s", i, tt.in, tt.rulestr)
 	}
 }
