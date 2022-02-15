@@ -76,9 +76,13 @@ func TestGetRules(t *testing.T) {
 		{"len:5|len:10", Rules{&RuleLenValidator{5}, &RuleLenValidator{10}}, nil},
 		{"lenx:5", nil, ErrNotImplementedRule},
 		{"len:5x", nil, ErrNotValidRule},
+		{"len:5:", nil, ErrNotValidRule},
 		{"lenfsdf5", nil, ErrNotValidRule},
 		{"min:10", Rules{&RuleMinValidator{10}}, nil},
 		{"min:x", nil, ErrNotValidRule},
+		{"max:10", Rules{&RuleMaxValidator{10}}, nil},
+		{"max:x", nil, ErrNotValidRule},
+		{"max:10|len:5|min:20", Rules{&RuleMaxValidator{10}, &RuleLenValidator{5}, &RuleMinValidator{20}}, nil},
 	}
 
 	for _, tt := range tests {
@@ -93,20 +97,32 @@ func TestIsValid(t *testing.T) {
 		rulestr     string
 		expectedErr error
 	}{
-		//len
+		// len
 		{"1.2.3", "len:5", nil},
 		{"1.2.3", "len:6", RuleLengthInvalid},
 		{5, "len:6", ErrRuleWrongType},
 		{[]string{"123456", "abcdef"}, "len:6", nil},
 		{[]string{"123456", "abcdefx"}, "len:6", RuleLengthInvalid},
-		//min
+		{[]int{1, 2}, "len:6", ErrRuleWrongType},
+		// min
 		{21, "min:20", nil},
 		{19, "min:20", RuleMinInvalid},
+		{[]int{1, 21, 5}, "min:6", RuleMinInvalid},
+		{[]int{12, 21, 28}, "min:6", nil},
+		// max
+		{21, "max:20", RuleMaxInvalid},
+		{19, "max:20", nil},
+		{[]int{1, 20, 5}, "max:20", nil},
+		{[]int{12, 21, 28}, "max:20", RuleMaxInvalid},
+		// min | max
+		{19, "min:10|max:20", nil},
+		{19, "min:21|max:1", RuleMinInvalid},
+		{19, "max:1|min:10", RuleMaxInvalid},
 	}
 
 	for i, tt := range tests {
 		rules, err := GetRules(tt.rulestr)
-		require.NoError(t, err)
+		require.NoError(t, err, "case %d", i)
 		isValid := IsValid(tt.in, rules)
 		require.Equal(t, tt.expectedErr, isValid,
 			"case %d validation miss: %s against %s", i, tt.in, tt.rulestr)

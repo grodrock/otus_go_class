@@ -39,7 +39,7 @@ func (r Rules) isMatched(v interface{}) error {
 
 // GetRuleMatcher return RuleMatcher from rule string
 func getRuleMatcher(rulestr string) (RuleMatcher, error) {
-	validTagPattern, _ := regexp.Compile(`(.*):(.*)`)
+	validTagPattern := regexp.MustCompile(`^(.+?):(.*)$`)
 	if !validTagPattern.MatchString(rulestr) {
 		return nil, ErrNotValidRule
 	}
@@ -56,6 +56,11 @@ func getRuleMatcher(rulestr string) (RuleMatcher, error) {
 	case "min":
 		if v, err := strconv.Atoi(ruleValue); err == nil {
 			return &RuleMinValidator{v}, nil
+		}
+		return nil, ErrNotValidRule
+	case "max":
+		if v, err := strconv.Atoi(ruleValue); err == nil {
+			return &RuleMaxValidator{v}, nil
 		}
 		return nil, ErrNotValidRule
 
@@ -95,4 +100,21 @@ func (rvalidator *RuleMinValidator) isMatched(v interface{}) error {
 		return nil
 	}
 	return RuleMinInvalid
+}
+
+type RuleMaxValidator struct {
+	max int
+}
+
+func (rvalidator *RuleMaxValidator) isMatched(v interface{}) error {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Int {
+		return ErrRuleWrongType
+	}
+
+	result := v.(int) <= rvalidator.max
+	if result {
+		return nil
+	}
+	return RuleMaxInvalid
 }
