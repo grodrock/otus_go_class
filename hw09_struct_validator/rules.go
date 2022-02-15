@@ -86,7 +86,7 @@ func (rvalidator *RuleLenValidator) isMatched(v interface{}) error {
 	if rv.Kind() != reflect.String {
 		return ErrRuleWrongType
 	}
-	result := len(v.(string)) == rvalidator.length
+	result := len(rv.String()) == rvalidator.length
 	if result {
 		return nil
 	}
@@ -103,7 +103,7 @@ func (rvalidator *RuleMinValidator) isMatched(v interface{}) error {
 		return ErrRuleWrongType
 	}
 
-	result := v.(int) >= rvalidator.min
+	result := int(rv.Int()) >= rvalidator.min
 	if result {
 		return nil
 	}
@@ -120,7 +120,7 @@ func (rvalidator *RuleMaxValidator) isMatched(v interface{}) error {
 		return ErrRuleWrongType
 	}
 
-	result := v.(int) <= rvalidator.max
+	result := int(rv.Int()) <= rvalidator.max
 	if result {
 		return nil
 	}
@@ -136,7 +136,7 @@ func (rvalidator *RuleRegexpValidator) isMatched(v interface{}) error {
 	if rv.Kind() != reflect.String {
 		return ErrRuleWrongType
 	}
-	if rvalidator.pattern.MatchString(v.(string)) {
+	if rvalidator.pattern.MatchString(rv.String()) {
 		return nil
 	}
 	return RuleRegexpInvalid
@@ -160,9 +160,9 @@ func (rvalidator *RuleInValidator) isMatched(v interface{}) error {
 	var key string
 	switch rv.Kind() {
 	case reflect.String:
-		key = v.(string)
+		key = rv.String()
 	case reflect.Int:
-		key = strconv.Itoa(v.(int))
+		key = strconv.Itoa(int(rv.Int()))
 	default:
 		return ErrRuleWrongType
 	}
