@@ -39,14 +39,16 @@ type (
 )
 
 func TestValidate(t *testing.T) {
-	t.Skip()
 	tests := []struct {
 		in          interface{}
 		expectedErr error
 	}{
-		// {UserRole("role"), ErrorNotSupportedType},
+		{UserRole("role"), ErrNotSupportedType},
 		{App{"1.2.3"}, nil},
-		// {App{"1.2.34"}, ValidationErrors{}},
+		{
+			App{"1.2.34"},
+			ValidationErrors{ValidationError{"Version", ErrFieldValidation}},
+		},
 	}
 
 	for i, tt := range tests {
@@ -55,7 +57,11 @@ func TestValidate(t *testing.T) {
 			t.Parallel()
 
 			err := Validate(tt.in)
-			require.ErrorIs(t, err, tt.expectedErr, "err %v not as expected %v", err, tt.expectedErr)
+			if err != nil {
+				require.Equal(t, tt.expectedErr, err, "err %v not as expected %v", err, tt.expectedErr)
+			} else {
+				require.Nil(t, tt.expectedErr)
+			}
 
 		})
 	}
@@ -70,7 +76,9 @@ func TestRuleMatcher(t *testing.T) {
 		{"len:5|len:10", Rules{&RuleLenValidator{5}, &RuleLenValidator{10}}, nil},
 		{"lenx:5", nil, ErrNotImplementedRule},
 		{"len:5x", nil, ErrNotValidRule},
+		{"lenfsdf5", nil, ErrNotValidRule},
 		{"min:10", Rules{&RuleMinValidator{10}}, nil},
+		{"min:x", nil, ErrNotValidRule},
 	}
 
 	for _, tt := range tests {
