@@ -86,6 +86,7 @@ func TestGetRules(t *testing.T) {
 		{"max:10|len:5|min:20", Rules{&RuleMaxValidator{10}, &RuleLenValidator{5}, &RuleMinValidator{20}}, nil},
 		{"regexp:/foo([/", nil, RuleRegexpPatternInvalid},
 		{"regexp:^abc&", Rules{&RuleRegexpValidator{regexp.MustCompile(`^abc&`)}}, nil},
+		{"in:5,7", Rules{&RuleInValidator{inVals: "5,7"}}, nil},
 	}
 
 	for _, tt := range tests {
@@ -129,6 +130,15 @@ func TestIsValid(t *testing.T) {
 		{"Abcdef", "regexp:^Abc|len:7", RuleLengthInvalid},
 		{"Abcdef", "regexp:^Abc|len:6", nil},
 		{"some@example.com", "regexp:^\\w+@\\w+\\.\\w+$", nil},
+		// in
+		{"foo", "in:foo", nil},
+		{"foo1", "in:foo", RuleInInvalid},
+		{[]string{"foo", "bar"}, "in:foo", RuleInInvalid},
+		{[]string{"foo", "bar"}, "in:foo,bar", nil},
+		{1, "in:1,2,3", nil},
+		{[]int{1, 2, 3}, "in:1,2,3,4,5", nil},
+		{[]int{1, 2, 3}, "in:1,2,5", RuleInInvalid},
+		// {[]int{1, 20, 5}, "in:20,5,6", nil},
 	}
 
 	for i, tt := range tests {

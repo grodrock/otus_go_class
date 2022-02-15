@@ -17,4 +17,5 @@ var (
 	RuleMaxInvalid           = errors.New("max value rule violation")
 	RuleRegexpPatternInvalid = errors.New("regexp pattern invalid")
 	RuleRegexpInvalid        = errors.New("regexp value rule violation")
+	RuleInInvalid            = errors.New("in value rule violation")
 )
