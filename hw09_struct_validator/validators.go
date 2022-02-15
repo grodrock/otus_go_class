@@ -4,10 +4,10 @@ import (
 	"reflect"
 )
 
-// wrapper on rules validation: helps to validate slice elems
+// IsValid wrapper on rules validation: helps to validate slice elems.
 func IsValid(v interface{}, rm RuleMatcher) error {
 	rv := reflect.ValueOf(v)
-	switch rv.Kind() {
+	switch rv.Kind() { //nolint:exhaustive
 	case reflect.Slice:
 
 		for i := 0; i < rv.Len(); i++ {

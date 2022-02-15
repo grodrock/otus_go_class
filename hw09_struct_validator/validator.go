@@ -77,7 +77,6 @@ func ValidateStruct(rv reflect.Value) error {
 				Err:   err,
 			})
 		}
-
 	}
 
 	if len(validationErrors) > 0 {

@@ -13,9 +13,9 @@ type RuleMatcher interface {
 
 type Rules []RuleMatcher
 
-// GetRules get Rules (RuleMatcher) from validation tag
+// GetRules get Rules (RuleMatcher) from validation tag.
 func GetRules(rulesSstr string) (Rules, error) {
-	var rules Rules
+	var rules Rules //nolint:prealloc
 	for _, r := range strings.Split(rulesSstr, "|") {
 		matcher, err := getRuleMatcher(r)
 		if err != nil {
@@ -23,7 +23,6 @@ func GetRules(rulesSstr string) (Rules, error) {
 		}
 		rules = append(rules, matcher)
 	}
-
 	return rules, nil
 }
 
@@ -37,7 +36,7 @@ func (r Rules) isMatched(v interface{}) error {
 	return nil
 }
 
-// GetRuleMatcher return RuleMatcher from rule string
+// GetRuleMatcher return RuleMatcher from rule string.
 func getRuleMatcher(rulestr string) (RuleMatcher, error) {
 	validTagPattern := regexp.MustCompile(`^(.+?):(.*)$`)
 	if !validTagPattern.MatchString(rulestr) {
@@ -66,12 +65,11 @@ func getRuleMatcher(rulestr string) (RuleMatcher, error) {
 	case "regexp":
 		rg, err := regexp.Compile(ruleValue)
 		if err != nil {
-			return nil, RuleRegexpPatternInvalid
+			return nil, ErrRuleRegexpPatternInvalid
 		}
 		return &RuleRegexpValidator{rg}, nil
 	case "in":
 		return &RuleInValidator{inVals: ruleValue}, nil
-
 	}
 
 	return nil, ErrNotImplementedRule
@@ -90,7 +88,7 @@ func (rvalidator *RuleLenValidator) isMatched(v interface{}) error {
 	if result {
 		return nil
 	}
-	return RuleLengthInvalid
+	return ErrRuleLengthInvalid
 }
 
 type RuleMinValidator struct {
@@ -107,7 +105,7 @@ func (rvalidator *RuleMinValidator) isMatched(v interface{}) error {
 	if result {
 		return nil
 	}
-	return RuleMinInvalid
+	return ErrRuleMinInvalid
 }
 
 type RuleMaxValidator struct {
@@ -124,7 +122,7 @@ func (rvalidator *RuleMaxValidator) isMatched(v interface{}) error {
 	if result {
 		return nil
 	}
-	return RuleMaxInvalid
+	return ErrRuleMaxInvalid
 }
 
 type RuleRegexpValidator struct {
@@ -139,8 +137,7 @@ func (rvalidator *RuleRegexpValidator) isMatched(v interface{}) error {
 	if rvalidator.pattern.MatchString(rv.String()) {
 		return nil
 	}
-	return RuleRegexpInvalid
-
+	return ErrRuleRegexpInvalid
 }
 
 type RuleInValidator struct {
@@ -158,7 +155,7 @@ func (rvalidator *RuleInValidator) isMatched(v interface{}) error {
 		}
 	}
 	var key string
-	switch rv.Kind() {
+	switch rv.Kind() { //nolint:exhaustive
 	case reflect.String:
 		key = rv.String()
 	case reflect.Int:
@@ -170,5 +167,5 @@ func (rvalidator *RuleInValidator) isMatched(v interface{}) error {
 		return nil
 	}
 
-	return RuleInInvalid
+	return ErrRuleInInvalid
 }
