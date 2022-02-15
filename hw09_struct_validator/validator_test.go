@@ -3,6 +3,7 @@ package hw09structvalidator
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -83,6 +84,8 @@ func TestGetRules(t *testing.T) {
 		{"max:10", Rules{&RuleMaxValidator{10}}, nil},
 		{"max:x", nil, ErrNotValidRule},
 		{"max:10|len:5|min:20", Rules{&RuleMaxValidator{10}, &RuleLenValidator{5}, &RuleMinValidator{20}}, nil},
+		{"regexp:/foo([/", nil, RuleRegexpPatternInvalid},
+		{"regexp:^abc&", Rules{&RuleRegexpValidator{regexp.MustCompile(`^abc&`)}}, nil},
 	}
 
 	for _, tt := range tests {
@@ -118,6 +121,14 @@ func TestIsValid(t *testing.T) {
 		{19, "min:10|max:20", nil},
 		{19, "min:21|max:1", RuleMinInvalid},
 		{19, "max:1|min:10", RuleMaxInvalid},
+		// regexp
+		{"19", "regexp:^Abc", RuleRegexpInvalid},
+		{"Abc", "regexp:^Abc", nil},
+		{"Abcdef", "regexp:^Abc", nil},
+		{"Abcdef", "regexp:^Abc$", RuleRegexpInvalid},
+		{"Abcdef", "regexp:^Abc|len:7", RuleLengthInvalid},
+		{"Abcdef", "regexp:^Abc|len:6", nil},
+		{"some@example.com", "regexp:^\\w+@\\w+\\.\\w+$", nil},
 	}
 
 	for i, tt := range tests {
