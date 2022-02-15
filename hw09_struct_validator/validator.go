@@ -14,9 +14,6 @@ type ValidationError struct {
 
 const validateTag string = "validate"
 
-// errors
-var ()
-
 type ValidationErrors []ValidationError
 
 func (v ValidationErrors) Error() string {
@@ -24,7 +21,7 @@ func (v ValidationErrors) Error() string {
 
 	for _, ve := range v {
 		wrappedErr = errors.Wrap(wrappedErr, ve.Field)
-		//wrappedErr = fmt.Errorf(ve.Field, ve.Err)
+		// wrappedErr = fmt.Errorf(ve.Field, ve.Err)
 	}
 
 	return wrappedErr.Error()
@@ -34,7 +31,7 @@ func Validate(v interface{}) error {
 	// check value is a struct
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Struct {
-		return ErrorNotSupportedType
+		return ErrNotSupportedType
 	}
 	return ValidateStruct(rv)
 }
@@ -50,11 +47,12 @@ func ValidateStruct(rv reflect.Value) error {
 		fv := rv.Field(i)
 		fieldName := field.Name
 
-		// get validation rule if exist
+		// get validation rule string if exist
 		validateTagString, ok := field.Tag.Lookup(validateTag)
 		if !ok {
 			continue
 		}
+
 		// create rules from validateTagString
 		rules, err := GetRules(validateTagString)
 		if err != nil {
@@ -64,8 +62,17 @@ func ValidateStruct(rv reflect.Value) error {
 			})
 			continue
 		}
+
+		// check if we can wrap it to interface{}
+		if !fv.CanInterface() {
+			validationErrors = append(validationErrors, ValidationError{
+				Field: fieldName,
+				Err:   ErrFieldValidation,
+			})
+		}
+
 		// validate value
-		if !IsValid(fv, rules) {
+		if !IsValid(fv.Interface(), rules) {
 			validationErrors = append(validationErrors, ValidationError{
 				Field: fieldName,
 				Err:   ErrFieldValidation,
