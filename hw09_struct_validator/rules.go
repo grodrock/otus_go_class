@@ -63,6 +63,12 @@ func getRuleMatcher(rulestr string) (RuleMatcher, error) {
 			return &RuleMaxValidator{v}, nil
 		}
 		return nil, ErrNotValidRule
+	case "regexp":
+		rg, err := regexp.Compile(ruleValue)
+		if err != nil {
+			return nil, RuleRegexpPatternInvalid
+		}
+		return &RuleRegexpValidator{rg}, nil
 
 	}
 
@@ -117,4 +123,20 @@ func (rvalidator *RuleMaxValidator) isMatched(v interface{}) error {
 		return nil
 	}
 	return RuleMaxInvalid
+}
+
+type RuleRegexpValidator struct {
+	pattern *regexp.Regexp
+}
+
+func (rvalidator *RuleRegexpValidator) isMatched(v interface{}) error {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.String {
+		return ErrRuleWrongType
+	}
+	if rvalidator.pattern.MatchString(v.(string)) {
+		return nil
+	}
+	return RuleRegexpInvalid
+
 }
