@@ -50,6 +50,33 @@ func TestValidate(t *testing.T) {
 			App{"1.2.34"},
 			ValidationErrors{ValidationError{"Version", RuleLengthInvalid}},
 		},
+		{
+			in: User{
+				ID:     "5e68cffb-6715-4006-8b5e-b50400409005",
+				Name:   "User1",
+				Age:    25,
+				Email:  "example@dot.com",
+				Role:   UserRole("admin"),
+				Phones: []string{"89001112233"},
+			},
+			expectedErr: nil,
+		},
+		{
+			in: User{
+				ID:     "5e68cffb-6715-4006-8b5e-b50400409005_xxxx",
+				Name:   "User1",
+				Age:    99,
+				Email:  "exampledot.com",
+				Role:   UserRole("janitor"),
+				Phones: []string{"89001112233"},
+			},
+			expectedErr: ValidationErrors{
+				ValidationError{"ID", RuleLengthInvalid},
+				ValidationError{"Age", RuleMaxInvalid},
+				ValidationError{"Email", RuleRegexpInvalid},
+				ValidationError{"Role", RuleInInvalid},
+			},
+		},
 	}
 
 	for i, tt := range tests {
@@ -108,6 +135,7 @@ func TestIsValid(t *testing.T) {
 		{[]string{"123456", "abcdef"}, "len:6", nil},
 		{[]string{"123456", "abcdefx"}, "len:6", RuleLengthInvalid},
 		{[]int{1, 2}, "len:6", ErrRuleWrongType},
+		{UserRole("admin"), "len:5", nil},
 		// min
 		{21, "min:20", nil},
 		{19, "min:20", RuleMinInvalid},
@@ -130,6 +158,7 @@ func TestIsValid(t *testing.T) {
 		{"Abcdef", "regexp:^Abc|len:7", RuleLengthInvalid},
 		{"Abcdef", "regexp:^Abc|len:6", nil},
 		{"some@example.com", "regexp:^\\w+@\\w+\\.\\w+$", nil},
+		{UserRole("admin"), "regexp:^a", nil},
 		// in
 		{"foo", "in:foo", nil},
 		{"foo1", "in:foo", RuleInInvalid},
@@ -138,7 +167,7 @@ func TestIsValid(t *testing.T) {
 		{1, "in:1,2,3", nil},
 		{[]int{1, 2, 3}, "in:1,2,3,4,5", nil},
 		{[]int{1, 2, 3}, "in:1,2,5", RuleInInvalid},
-		// {[]int{1, 20, 5}, "in:20,5,6", nil},
+		{UserRole("admin"), "in:admin,stuff", nil},
 	}
 
 	for i, tt := range tests {
