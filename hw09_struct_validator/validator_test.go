@@ -48,7 +48,7 @@ func TestValidate(t *testing.T) {
 		{App{"1.2.3"}, nil},
 		{
 			App{"1.2.34"},
-			ValidationErrors{ValidationError{"Version", RuleLengthInvalid}},
+			ValidationErrors{ValidationError{"Version", ErrRuleLengthInvalid}},
 		},
 		{
 			in: User{
@@ -58,6 +58,7 @@ func TestValidate(t *testing.T) {
 				Email:  "example@dot.com",
 				Role:   UserRole("admin"),
 				Phones: []string{"89001112233"},
+				meta:   []byte("{enabled:true}"),
 			},
 			expectedErr: nil,
 		},
@@ -71,10 +72,10 @@ func TestValidate(t *testing.T) {
 				Phones: []string{"89001112233"},
 			},
 			expectedErr: ValidationErrors{
-				ValidationError{"ID", RuleLengthInvalid},
-				ValidationError{"Age", RuleMaxInvalid},
-				ValidationError{"Email", RuleRegexpInvalid},
-				ValidationError{"Role", RuleInInvalid},
+				ValidationError{"ID", ErrRuleLengthInvalid},
+				ValidationError{"Age", ErrRuleMaxInvalid},
+				ValidationError{"Email", ErrRuleRegexpInvalid},
+				ValidationError{"Role", ErrRuleInInvalid},
 			},
 		},
 	}
@@ -90,10 +91,10 @@ func TestValidate(t *testing.T) {
 			} else {
 				require.Nil(t, tt.expectedErr)
 			}
-
 		})
 	}
 }
+
 func TestGetRules(t *testing.T) {
 	tests := []struct {
 		rulestr       string
@@ -111,7 +112,7 @@ func TestGetRules(t *testing.T) {
 		{"max:10", Rules{&RuleMaxValidator{10}}, nil},
 		{"max:x", nil, ErrNotValidRule},
 		{"max:10|len:5|min:20", Rules{&RuleMaxValidator{10}, &RuleLenValidator{5}, &RuleMinValidator{20}}, nil},
-		{"regexp:/foo([/", nil, RuleRegexpPatternInvalid},
+		{"regexp:/foo([/", nil, ErrRuleRegexpPatternInvalid},
 		{"regexp:^abc&", Rules{&RuleRegexpValidator{regexp.MustCompile(`^abc&`)}}, nil},
 		{"in:5,7", Rules{&RuleInValidator{inVals: "5,7"}}, nil},
 	}
@@ -122,6 +123,7 @@ func TestGetRules(t *testing.T) {
 		require.Equal(t, tt.expectedrules, matcher)
 	}
 }
+
 func TestIsValid(t *testing.T) {
 	tests := []struct {
 		in          interface{}
@@ -130,43 +132,43 @@ func TestIsValid(t *testing.T) {
 	}{
 		// len
 		{"1.2.3", "len:5", nil},
-		{"1.2.3", "len:6", RuleLengthInvalid},
+		{"1.2.3", "len:6", ErrRuleLengthInvalid},
 		{5, "len:6", ErrRuleWrongType},
 		{[]string{"123456", "abcdef"}, "len:6", nil},
-		{[]string{"123456", "abcdefx"}, "len:6", RuleLengthInvalid},
+		{[]string{"123456", "abcdefx"}, "len:6", ErrRuleLengthInvalid},
 		{[]int{1, 2}, "len:6", ErrRuleWrongType},
 		{UserRole("admin"), "len:5", nil},
 		// min
 		{21, "min:20", nil},
-		{19, "min:20", RuleMinInvalid},
-		{[]int{1, 21, 5}, "min:6", RuleMinInvalid},
+		{19, "min:20", ErrRuleMinInvalid},
+		{[]int{1, 21, 5}, "min:6", ErrRuleMinInvalid},
 		{[]int{12, 21, 28}, "min:6", nil},
 		// max
-		{21, "max:20", RuleMaxInvalid},
+		{21, "max:20", ErrRuleMaxInvalid},
 		{19, "max:20", nil},
 		{[]int{1, 20, 5}, "max:20", nil},
-		{[]int{12, 21, 28}, "max:20", RuleMaxInvalid},
+		{[]int{12, 21, 28}, "max:20", ErrRuleMaxInvalid},
 		// min | max
 		{19, "min:10|max:20", nil},
-		{19, "min:21|max:1", RuleMinInvalid},
-		{19, "max:1|min:10", RuleMaxInvalid},
+		{19, "min:21|max:1", ErrRuleMinInvalid},
+		{19, "max:1|min:10", ErrRuleMaxInvalid},
 		// regexp
-		{"19", "regexp:^Abc", RuleRegexpInvalid},
+		{"19", "regexp:^Abc", ErrRuleRegexpInvalid},
 		{"Abc", "regexp:^Abc", nil},
 		{"Abcdef", "regexp:^Abc", nil},
-		{"Abcdef", "regexp:^Abc$", RuleRegexpInvalid},
-		{"Abcdef", "regexp:^Abc|len:7", RuleLengthInvalid},
+		{"Abcdef", "regexp:^Abc$", ErrRuleRegexpInvalid},
+		{"Abcdef", "regexp:^Abc|len:7", ErrRuleLengthInvalid},
 		{"Abcdef", "regexp:^Abc|len:6", nil},
 		{"some@example.com", "regexp:^\\w+@\\w+\\.\\w+$", nil},
 		{UserRole("admin"), "regexp:^a", nil},
 		// in
 		{"foo", "in:foo", nil},
-		{"foo1", "in:foo", RuleInInvalid},
-		{[]string{"foo", "bar"}, "in:foo", RuleInInvalid},
+		{"foo1", "in:foo", ErrRuleInInvalid},
+		{[]string{"foo", "bar"}, "in:foo", ErrRuleInInvalid},
 		{[]string{"foo", "bar"}, "in:foo,bar", nil},
 		{1, "in:1,2,3", nil},
 		{[]int{1, 2, 3}, "in:1,2,3,4,5", nil},
-		{[]int{1, 2, 3}, "in:1,2,5", RuleInInvalid},
+		{[]int{1, 2, 3}, "in:1,2,5", ErrRuleInInvalid},
 		{UserRole("admin"), "in:admin,stuff", nil},
 	}
 
