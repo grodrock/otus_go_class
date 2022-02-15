@@ -69,6 +69,8 @@ func getRuleMatcher(rulestr string) (RuleMatcher, error) {
 			return nil, RuleRegexpPatternInvalid
 		}
 		return &RuleRegexpValidator{rg}, nil
+	case "in":
+		return &RuleInValidator{inVals: ruleValue}, nil
 
 	}
 
@@ -139,4 +141,34 @@ func (rvalidator *RuleRegexpValidator) isMatched(v interface{}) error {
 	}
 	return RuleRegexpInvalid
 
+}
+
+type RuleInValidator struct {
+	inVals string
+	inMap  map[string]bool
+}
+
+func (rvalidator *RuleInValidator) isMatched(v interface{}) error {
+	rv := reflect.ValueOf(v)
+	// init map
+	if rvalidator.inMap == nil {
+		rvalidator.inMap = make(map[string]bool)
+		for _, k := range strings.Split(rvalidator.inVals, ",") {
+			rvalidator.inMap[k] = true
+		}
+	}
+	var key string
+	switch rv.Kind() {
+	case reflect.String:
+		key = v.(string)
+	case reflect.Int:
+		key = strconv.Itoa(v.(int))
+	default:
+		return ErrRuleWrongType
+	}
+	if _, ok := rvalidator.inMap[key]; ok {
+		return nil
+	}
+
+	return RuleInInvalid
 }
