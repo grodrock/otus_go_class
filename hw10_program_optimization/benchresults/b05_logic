@@ -1,0 +1,7 @@
+goos: windows
+goarch: amd64
+pkg: github.com/grodrock/otus_go_class/hw10_program_optimization
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkGetDomainStat-12    	 2515125	      4551 ns/op	    4664 B/op	      35 allocs/op
+PASS
+ok  	github.com/grodrock/otus_go_class/hw10_program_optimization	16.801s
