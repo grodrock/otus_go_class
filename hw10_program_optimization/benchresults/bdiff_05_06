@@ -1,0 +1,8 @@
+name              old time/op    new time/op    delta
+GetDomainStat-12    4.55µs ± 0%    6.11µs ± 0%  +34.26%
+
+name              old alloc/op   new alloc/op   delta
+GetDomainStat-12    4.66kB ± 0%    6.58kB ± 0%  +41.17%
+
+name              old allocs/op  new allocs/op  delta
+GetDomainStat-12      35.0 ± 0%      34.0 ± 0%   -2.86%
